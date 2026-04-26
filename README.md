@@ -1,4 +1,4 @@
-Project Title : Creating a EC2 instance with a Security group SSH access 
+**Project Title : Creating a EC2 instance with a Security group SSH access **
 
 This is a project to create a stack using aws cloudformation. You can use visual designer, sample template or upload a template file. I usually use a sample template and edit it as i work along but your free to do what you please.
 
