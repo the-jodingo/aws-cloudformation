@@ -1,6 +1,4 @@
-**Project Title : Creating a EC2 instance with a Security group SSH access **
-
-This is a project to create a stack using aws cloudformation. You can use visual designer, sample template or upload a template file. I usually use a sample template and edit it as i work along but your free to do what you please.
+****Project Title : Creating a EC2 instance with a Security group SSH access ****
 
 On this particular project we will use aws cloudformation to launce a ec-2-instance with a Security group for SSH access. Importantly we need to create a security group first the attach it to the ec-2-instance.
 
@@ -9,7 +7,6 @@ Secondly, we will add a volume and attach it to our ec-2-instance without changi
 Lasty, we will the add S3 bucket to number 1 and number 2. That is without changing the original values.
 
 Note : I picked the current image id of Amazon Linux { ami-098e39bafa7e7303d }
-
 
 
 ## Deployment
