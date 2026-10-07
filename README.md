@@ -1,3 +1,6 @@
+[![AWS CloudFormation](https://img.shields.io/badge/AWS-CloudFormation-FF9900?logo=amazon-aws&logoColor=white)](https://aws.amazon.com/cloudformation/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 # AWS CloudFormation Templates
 
 A small set of CloudFormation templates for common EC2 and storage patterns.
