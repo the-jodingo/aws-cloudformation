@@ -1,122 +1,48 @@
-****Project Title : Creating a EC2 instance with a Security group SSH access ****
+# AWS CloudFormation Templates
 
-On this particular project we will use aws cloudformation to launce a ec-2-instance with a Security group for SSH access. Importantly we need to create a security group first the attach it to the ec-2-instance.
+A small set of CloudFormation templates for common EC2 and storage patterns.
+Each template is standalone and deployable as-is.
 
-Secondly, we will add a volume and attach it to our ec-2-instance without changing the cloudformation configuration.
+## Templates
 
-Lasty, we will the add S3 bucket to number 1 and number 2. That is without changing the original values.
+| Template | What it creates |
+|---|---|
+| `ec-2-template.yaml` | EC2 instance + security group (SSH) |
+| `Attach-an-EBS-volume.yaml` | EC2 instance + an additional 25 GB `gp3` EBS volume attached |
+| `S3Bucket.yml` | EC2 instance + security group + an S3 bucket |
 
-Note : I picked the current image id of Amazon Linux { ami-098e39bafa7e7303d }
+## Parameters
 
+Every template takes the same two parameters:
 
-## Deployment
+| Parameter | Description | Default |
+|---|---|---|
+| `KeyName` | An existing EC2 KeyPair name (for SSH) | *required* |
+| `SSHLocation` | CIDR allowed to SSH — **set this to your own IP/32** | `0.0.0.0/0` |
 
-To deploy this project sign in your aws console, and launch aws cloudformation. You can copy and save this file as aws-cloudformation.yaml or aws-cloudformation.json using vscode and upload it into the console.
+> **Security note:** `SSHLocation` defaults to `0.0.0.0/0` for convenience.
+> Change it to your own address before deploying anything real:
+> `--parameter-overrides SSHLocation=$(curl -s https://checkip.amazonaws.com)/32`
 
-
+## Deploy
 
 ```bash
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Creata a EC2 instance with a Security group SSH access
-Resources:
-  InstanceSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow SSH access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
- MyInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-098e39bafa7e7303d
-      InstanceType: t2.micro
-      SecurityGroupIds:
-        - !Ref InstanceSecurityGroup
-
+aws cloudformation deploy \
+  --template-file ec-2-template.yaml \
+  --stack-name ec2-ssh-demo \
+  --parameter-overrides KeyName=my-key SSHLocation=203.0.113.10/32 \
+  --capabilities CAPABILITY_IAM
 ```
 
-
-## 2.0 Attaching an EBS Volume to the ec-2 Instance
-
-I created a 25 GB Volume using the same ec-2 instance properties and then we wil attach the Volume to the ec-2
-
-
+Validate before deploying:
 
 ```bash
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Creata a EC2 instance with a Security group SSH access
-Resources:
-  InstanceSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Enable SSH access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
- MyInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-098e39bafa7e7303d
-      InstanceType: t2.micro
-      SecurityGroupIds:
-        - !Ref InstanceSecurityGroup
-MyVolume:
-  Type: AWS::EC2::Volume
-  Properties:
-    AvailabilityZone: !GetAtt MyInstance.AvailabilityZone
-    Size: 25
-MyVolumeAttachment:
-  Type: AWS::EC2::VolumeAttachment
-  Properties:
-    AvailabilityZone: !Ref MyInstance
-    VolumeId: !Ref MyVolume
-    Device: /dev/sdf
-    
+aws cloudformation validate-template --template-body file://ec-2-template.yaml
 ```
 
-## 2.0.1 Adding S3 Bucket to the Stack 
+## Notes
 
-```bash
-AWSTemplateFormatVersion: '2010-09-09'
-Description: Creata a EC2 instance with a Security group SSH access
-Resources:
-  InstanceSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Enable SSH access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: 0.0.0.0/0
- MyInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: ami-098e39bafa7e7303d
-      InstanceType: t2.micro
-      SecurityGroupIds:
-        - !Ref InstanceSecurityGroup
-MyVolume:
-  Type: AWS::EC2::Volume
-  Properties:
-    AvailabilityZone: !GetAtt MyInstance.AvailabilityZone
-    Size: 25
-MyVolumeAttachment:
-  Type: AWS::EC2::VolumeAttachment
-  Properties:
-    AvailabilityZone: !Ref MyInstance
-    VolumeId: !Ref MyVolume
-    Device: /dev/sdf
-MyS3Bucket:
-  Type: AWS::S3::Bucket
-  Properties:
-    BucketName: my-unique-bucket-name-001122554  <<< Ensure your bucket name is unique >>>
-
-    ```
-
-
+- The AMI ID is region-specific (`ami-098e39bafa7e7303d`). Look up the current
+  Amazon Linux 2 AMI for your region before deploying.
+- The S3 bucket name is generated from the stack name and account ID, so it
+  stays globally unique without hardcoding a name.

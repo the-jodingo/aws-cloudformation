@@ -1,31 +1,56 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creata a EC2 instance with a Security group SSH access
+Description: EC2 instance with an additional EBS volume attached
+
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair for SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+  SSHLocation:
+    Description: CIDR range allowed to SSH (use your own IP/32, not 0.0.0.0/0)
+    Type: String
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3}\.){3}\d{1,3}/\d{1,2}'
+    ConstraintDescription: Must be a valid CIDR block.
+
 Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Enable SSH access
+      GroupDescription: SSH access from an explicit CIDR range
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
- MyInstance:
+          CidrIp: !Ref SSHLocation
+      Tags:
+        - Key: Name
+          Value: ec2-ebs-demo-sg
+
+  MyInstance:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-098e39bafa7e7303d
       InstanceType: t2.micro
+      KeyName: !Ref KeyName
       SecurityGroupIds:
         - !Ref InstanceSecurityGroup
-MyVolume:
-  Type: AWS::EC2::Volume
-  Properties:
-    AvailabilityZone: !GetAtt MyInstance.AvailabilityZone
-    Size: 25
-MyVolumeAttachment:
-  Type: AWS::EC2::VolumeAttachment
-  Properties:
-    AvailabilityZone: !Ref MyInstance
-    VolumeId: !Ref MyVolume
-    Device: /dev/sdf
-    
+      Tags:
+        - Key: Name
+          Value: ec2-ebs-demo
+
+  MyVolume:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !GetAtt MyInstance.AvailabilityZone
+      Size: 25
+      VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: ec2-ebs-demo-volume
+
+  MyVolumeAttachment:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      Device: /dev/sdf
+      InstanceId: !Ref MyInstance
+      VolumeId: !Ref MyVolume
